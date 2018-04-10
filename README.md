@@ -8,7 +8,8 @@ A set of morally pure fetching builtins for [Nix].
 Prerequisites
 --------------
 
-While the fetchers provided here are *morally* pure, they rely on
+While the fetchers provided here are *morally* pure (that is, they
+always yield the same output for a given input), they rely on
 operations (such as network access) that `Nix` by itself can't allow.
 As such, they all rely on the special `exec` builtin. In vanilla
 `Nix`, this builtin is only available when the
