@@ -1,0 +1,119 @@
+#! @bash@/bin/bash
+
+set -euo pipefail
+
+export PATH=@curl@/bin:@jq@/bin:@coreutils@/bin
+
+declare tmpdir
+tmpdir="$(mktemp --directory --tmpdir fetch-pypi-hash.XXXXXXXXXX)"
+
+cleanup () {
+    rm --force --recursive "$tmpdir"
+}
+
+trap cleanup EXIT
+
+validate_args() {
+    if [ "$#" -ne 2 ]; then
+        echo "USAGE: $0 NAME VERSION" >&2
+        exit 1
+    fi
+    local -r name="$1"
+    local -r version="$2"
+
+    # Adapted from PEP-508
+    # https://www.python.org/dev/peps/pep-0508/#names
+    local name_regex
+    # Either a single letter or digit
+    name_regex+='^([A-Za-z0-9]|'
+    # Or a sequence of letters, numbers, dots, underscores, and dashes
+    # that starts and ends with a letter or digit
+    name_regex+='[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9])$'
+    if ! [[ "$name" =~ $name_regex ]]; then
+        echo "Invalid python package name $name" >&2
+        exit 1
+    fi
+
+    # Adapted from PEP-440.
+    # https://www.python.org/dev/peps/pep-0440/#appendix-b-parsing-version-strings-with-regular-expressions
+    local version_regex
+    # The version "epoch"
+    version_regex+='^([1-9][0-9]*!)?'
+    # The thing we normally think of as a version number
+    version_regex+='(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*'
+    # Pre-release marking
+    version_regex+='((a|b|rc)(0|[1-9][0-9]*))?'
+    # Post release marking
+    version_regex+='(\.post(0|[1-9][0-9]*))?'
+    # Development release... Possibly shouldn't support these.
+    version_regex+='(\.dev(0|[1-9][0-9]*))?$'
+    if ! [[ "$version" =~ $version_regex ]]; then
+        echo "Invalid python package version $version" >&2
+        exit 1
+    fi
+}
+
+fetch_json () {
+    local -r name="$1"
+    local -r version="$2"
+
+    code="$(curl --silent --show-error --output "$tmpdir/download" \
+                --write-out "%{http_code}" \
+                "https://pypi.org/pypi/$name/$version/json")"
+    if [ "$code" -ne "$code" ] 2>/dev/null; then
+        echo "Unexpected non-numeric HTTP status code from curl:" \
+            "$code" >&2
+        exit 1
+    fi
+
+    if [ "$code" -ne 200 ]; then
+        echo "{ failure-type = ''HTTP-status''; code = $code; }"
+        exit
+    fi
+}
+
+parse_json () {
+    local -r name="$1"
+    local -r version="$2"
+    local -r version
+    local query
+    # Find the URL...
+    query+='.urls | '
+    # that is the gzipped source tarball.
+    query+="map(select(.filename == \"$name-$version.tar.gz\")) | "
+    # There can only be one by pypi's name uniqueness guarantees, get
+    # its hash.
+    query+='.[0].digests.sha256'
+    local hash
+    hash=$(jq "$query" <"$tmpdir/download" 2>"$tmpdir/err" || echo "")
+    if [ -z "$hash" ]; then
+        local msg
+        msg="''$(cat "$tmpdir/err")''"
+        echo "{ failure-type = ''JSON-parse''; message = $msg; }"
+        exit
+    fi
+
+    echo "{ sha256 = $hash; }" \
+      >"$tmpdir/default.nix"
+}
+
+main() {
+    validate_args "$@"
+    local -r name=$1
+    local -r version=$2
+
+    local -r cache_base="${XDG_CACHE_HOME-:$HOME/.cache}/nix-fetchers"
+    local -r cache_dir="$cache_base/fetchpypi/$name/$version"
+    if [ ! -f "$cache_dir/default.nix" ]; then
+        mkdir -p "$cache_dir"
+
+        fetch_json "$name" "$version"
+
+        parse_json "$name" "$version"
+
+        mv "$tmpdir/default.nix" "$cache_dir"
+    fi
+    cat "$cache_dir/default.nix"
+}
+
+main "$@"
