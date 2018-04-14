@@ -14,12 +14,13 @@ cleanup () {
 trap cleanup EXIT
 
 validate_args() {
-    if [ "$#" -ne 2 ]; then
-        echo "USAGE: $0 NAME VERSION" >&2
+    if [ "$#" -ne 3 ]; then
+        echo "USAGE: $0 NAME VERSION FILENAME" >&2
         exit 1
     fi
     local -r name="$1"
     local -r version="$2"
+    local -r filename="$3"
 
     # Adapted from PEP-508
     # https://www.python.org/dev/peps/pep-0508/#names
@@ -51,6 +52,14 @@ validate_args() {
         echo "Invalid python package version $version" >&2
         exit 1
     fi
+
+    case "$filename" in
+        . | .. | */*)
+	    echo "Invalid filename $filename" >&2
+	    exit 1
+	    ;;
+	*) ;;
+    esac
 }
 
 fetch_json () {
@@ -75,21 +84,29 @@ fetch_json () {
 parse_json () {
     local -r name="$1"
     local -r version="$2"
-    local -r version
+    local -r filename="$3"
     local query
     # Find the URL...
     query+='.urls | '
-    # that is the gzipped source tarball.
-    query+="map(select(.filename == \"$name-$version.tar.gz\")) | "
-    # There can only be one by pypi's name uniqueness guarantees, get
-    # its hash.
-    query+='.[0].digests.sha256'
+    # that is the filename we want
+    # disable SC2016 because we *want* a literal $ here.
+    # shellcheck disable=SC2016
+    query+='map(select(.filename == $filename)) | '
+    # Fail if the filename doesn't exist
+    query+='if length == 0 then false else '
+    # Otherwise there can only be one by pypi's name uniqueness
+    # guarantees, get its hash.
+    query+='.[0].digests.sha256 end'
     local hash
-    hash=$(jq "$query" <"$tmpdir/download" 2>"$tmpdir/err" || echo "")
+    hash=$(jq "$query" --arg filename "$filename" \
+             <"$tmpdir/download" 2>"$tmpdir/err" || echo "")
     if [ -z "$hash" ]; then
         local msg
         msg="''$(cat "$tmpdir/err")''"
         echo "{ failure-type = ''JSON-parse''; message = $msg; }"
+        exit
+    elif [ "$hash" = "false" ]; then
+        echo "{ failure-type = ''missing-filename''; }"
         exit
     fi
 
@@ -99,18 +116,18 @@ parse_json () {
 
 main() {
     validate_args "$@"
-    local -r name=$1
-    local -r version=$2
+    local -r name="$1"
+    local -r version="$2"
+    local -r filename="$3"
 
     local -r cache_base="${XDG_CACHE_HOME-:$HOME/.cache}/nix-fetchers"
-    local -r cache_dir="$cache_base/fetchpypi/$name/$version"
+    local -r cache_dir="$cache_base/fetchpypi/$name/$version/$filename"
     if [ ! -f "$cache_dir/default.nix" ]; then
-        mkdir -p "$cache_dir"
-
         fetch_json "$name" "$version"
 
-        parse_json "$name" "$version"
+        parse_json "$name" "$version" "$filename"
 
+        mkdir -p "$cache_dir"
         mv "$tmpdir/default.nix" "$cache_dir"
     fi
     cat "$cache_dir/default.nix"

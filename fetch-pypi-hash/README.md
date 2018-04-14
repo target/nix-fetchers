@@ -9,6 +9,8 @@ Get the hash of the source tarball for a given PyPI package.
   example, `pillow` is an error while `Pillow` is correct.
 * `version`: The version of the package. Must be in canonical form, as
   defined in [PEP 440][PEP-440].
+* `filename`: The name of the source file to hash. Defaults to
+  `${name}-${version}.tar.gz`.
 
 [PEP-440]: https://www.python.org/dev/peps/pep-0440/
 
@@ -20,7 +22,8 @@ Get the hash of the source tarball for a given PyPI package.
 
 ### Failure
 
-* `failure-type`: One of `"HTTP-status"` or `"JSON-parse"`.
+* `failure-type`: One of `"HTTP-status"`, `"JSON-parse"`, or
+  `"missing-filename"`.
 * `code`: On an `HTTP-status` error, the non-200 HTTP status code.
 * `message`: On a `JSON-parse` error, the error message from the
    parser.

@@ -11,6 +11,26 @@ let
         sha256 = "12f29d6c23424f704c66b5b68c02fe0b571504459605cfe36ab8158359b0e1bb";
       };
     };
+    fetch-pypi-hash-bad-filename = {
+      value = all-fetchers.fetch-pypi-hash {
+        name = "Pillow";
+        version = "5.0.0";
+        filename = "this-better-not-exist.tar.gz";
+      };
+      expected = {
+        failure-type = "missing-filename";
+      };
+    };
+    fetch-pypi-zip = {
+      value = all-fetchers.fetch-pypi-hash rec {
+        name = "recordclass";
+        version = "0.5";
+        filename = "${name}-${version}.zip";
+      };
+      expected = {
+        sha256 = "4582ed9621846cd67c7647edaa2940ddaca75fda3ad5fd77616a347025e6fa78";
+      };
+    };
   };
   ###
   nixpkgs = fetchGit { url = "git://github.com/NixOS/nixpkgs.git";
