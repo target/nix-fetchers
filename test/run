@@ -13,16 +13,19 @@ trap cleanup EXIT
 
 mkdir -p "$tmpdir/cache"
 # share fetchGit cache...
-ln -s "$XDG_CACHE_HOME/nix" "$tmpdir/cache/nix"
+ln -s "${XDG_CACHE_HOME:-$HOME/.cache}/nix" "$tmpdir/cache/nix"
 export XDG_CACHE_HOME="$tmpdir/cache"
 
 declare expr
 expr="$(dirname "${BASH_SOURCE[0]}")/default.nix"
 
+SEED=$RANDOM
+echo "Seed: $SEED" >&2
 echo -n "Testing with an empty cache... " >&2
 declare empty
 empty="$(nix-instantiate --eval --read-write-mode \
              --allow-unsafe-native-code-during-evaluation \
+             --arg seed "$SEED" \
              "$expr")"
 echo "$empty" >&2
 [ "$empty" = "\"success\"" ]
@@ -31,6 +34,7 @@ echo -n "Testing with an warm cache..." >&2
 declare warm
 warm="$(nix-instantiate --eval --read-write-mode \
             --allow-unsafe-native-code-during-evaluation \
+             --arg seed "$SEED" \
             "$expr")"
 echo "$warm" >&2
 [ "$warm" = "\"success\"" ]
