@@ -14,6 +14,7 @@ let
   };
 in {
   test_fetch_tag = callTest ./fetch-tag.nix;
+  test_annotated_tag = callTest ./annotated-tag.nix;
   test_fetch_branch = callTest ./fetch-branch.nix;
   test_fetch_middle_commit = callTest ./fetch-middle-commit.nix;
   test_filter_source = callTest ./filter-source.nix;
