@@ -1,0 +1,4 @@
+language: nix
+sudo: false
+
+script: export XDG_CACHE_HOME=$HOME/.cache; cd ./test; ./run
