@@ -100,4 +100,25 @@ the fetcher
 Successful results are cached in [XDG_CACHE_HOME], under
 `nix-fetchers`.
 
+## DIFFERENCES FROM builtins.fetchGit
+
+### Morally pure, assuming good Git hygiene and tags are immutable
+
+Specifying a git commit and branch is effectively immutable and
+pure
+
+Specifying a tag name, in a team where you can trust all actors
+to behave responsibly, is also immutable and pure. Note: this
+can probably only be feasibly true in an organization with strict
+repository protection!
+
+### Uses separate Git repositories per upstream Git repository
+
+Sacrifices some caching possibilities for much faster initial
+syncs. Upstream's fetch-git uses a single Git repository for all
+cloned repos. This works great if all you're fetching is Nixpkgs,
+but is extremely slow for initial syncs of other, non-nixpkgs
+repositories.
+
+
 [XDG_CACHE_HOME]: https://specifications.freedesktop.org/basedir-spec/0.7/ar01s03.html
