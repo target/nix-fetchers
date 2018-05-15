@@ -3,4 +3,5 @@ builtins.listToAttrs (map (name: {
   value = ./. + "/${name}";
 }) [
   "fetch-pypi-hash"
+  "fetch-git"
 ])

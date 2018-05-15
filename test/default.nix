@@ -1,7 +1,7 @@
-# Run with:
-# nix-instantiate --eval --allow-unsafe-native-code-during-evaluation --read-write-mode
+{ seed ? "stable-seed" }:
+# Run with: ./run
 let
-  tests = {
+  comparison-tests = {
     fetch-pypi-hash = {
       value = all-fetchers.fetch-pypi-hash {
         name = "Pillow";
@@ -31,7 +31,8 @@ let
         sha256 = "4582ed9621846cd67c7647edaa2940ddaca75fda3ad5fd77616a347025e6fa78";
       };
     };
-  };
+  } // (import ../fetch-git/tests { inherit pkgs all-fetchers seed; });
+
   ###
   nixpkgs = fetchGit { url = "git://github.com/NixOS/nixpkgs.git";
                        ref = "release-18.03";
@@ -49,8 +50,9 @@ let
   all-fetchers = import "${extra-builtins}/extra-builtins.nix" {
     exec = exec';
   };
+
   run-test = acc: name: let
-    inherit (tests.${name}) value expected;
+    inherit (comparison-tests.${name}) value expected;
   in if value != expected
     then builtins.trace "Test ${name} failed" (
          builtins.trace "Expected:" (
@@ -58,4 +60,4 @@ let
          builtins.trace "Got: " (
          builtins.trace value "failure"))))
   else acc;
-in builtins.foldl' run-test "success" (builtins.attrNames tests)
+in builtins.foldl' run-test "success" (builtins.attrNames comparison-tests)
