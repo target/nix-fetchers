@@ -93,7 +93,12 @@ class BranchArchive:
             cmd(self.__bare_path(), ["git", "cat-file", "-e",
                                      "{}^{{commit}}".format(self.revision)])
             return True
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
+            log.debug(
+                "Did not find commit {} and instead got output: {}".format(
+                    self.revision, e.output
+                )
+            )
             return False
 
     def __fetch_depth(self, depth):
@@ -169,7 +174,13 @@ class TagArchive:
                                     "--depth=1",
                                     self.cache.repository,
                                     ref])
-                except subprocess.CalledProcessError:
+                except subprocess.CalledProcessError as e:
+                    log.debug(
+                        "Did not find tag {}, instead got output: {}".format(
+                            self.tag, e.output
+                        )
+                    )
+
                     raise NixError(
                         "tag-not-found",
                         "Tag {} not found".format(self.tag)
