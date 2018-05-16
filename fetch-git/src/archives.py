@@ -45,6 +45,11 @@ class BranchArchive:
 
     def make_archive(self):
         if not self.__exists():
+            log.warning("Fetching branch '{}' at rev '{}' from {}".format(
+                self.branch,
+                self.revision,
+                self.cache.repository
+            ))
             with self.cache.lock():
                 bare_path = self.__bare_path()
 
@@ -149,6 +154,10 @@ class TagArchive:
 
     def make_archive(self):
         if not self.__exists():
+            log.warning("Fetching tag '{}' from {}".format(
+                self.tag,
+                self.cache.repository
+                ))
             with self.cache.lock():
                 bare_path = self.__bare_path()
                 ref = "refs/tags/{}".format(self.tag)
