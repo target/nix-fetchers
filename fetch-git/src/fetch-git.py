@@ -10,6 +10,10 @@ from repository import RepositoryCache
 from nixerrors import NixError
 
 
+def dont_break_out_of_double_single_quotes(msg):
+    return msg.replace("''", '""')  # oh my word
+
+
 def print_success(outPath):
     nixPattern = """
 (let
@@ -21,7 +25,8 @@ in data // {{
     print(nixPattern.format(
       json.dumps({
           "outPath": archive.make_archive(),
-          "debug": log.debug_msgs
+          "debug": [dont_break_out_of_double_single_quotes(msg)
+                    for msg in log.debug_msgs]
       })
     ))
 
@@ -100,6 +105,7 @@ except NixError as e:
       json.dumps({
           "error": e.failure_type,
           "message": e.message,
-          "debug": log.debug_msgs
+          "debug": [dont_break_out_of_double_single_quotes(msg)
+                    for msg in log.debug_msgs]
       })
     ))
