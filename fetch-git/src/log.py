@@ -9,5 +9,5 @@ def debug(msg):
 
 
 def warning(msg):
-    print(msg, file=sys.stderr)
+    print(f"fetch-git: {msg}", file=sys.stderr)
     debug(msg)
