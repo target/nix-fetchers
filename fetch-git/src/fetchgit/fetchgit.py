@@ -3,7 +3,7 @@
 import json
 import argparse
 
-import fetchgit.log
+from fetchgit import log
 from fetchgit.archives import TagArchive, BranchArchive
 from fetchgit.arguments import BranchRevisionAction
 from fetchgit.repository import RepositoryCache
