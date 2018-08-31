@@ -24,7 +24,7 @@ in data // {{
 """
     print(nixPattern.format(
       json.dumps({
-          "outPath": archive.make_archive(),
+          "outPath": outPath,
           "debug": [dont_break_out_of_double_single_quotes(msg)
                     for msg in log.debug_msgs]
       })
