@@ -3,11 +3,9 @@
 runCommand "fetch-git" {
   src = ./src;
   inherit git gnutar python3;
-  nativeBuildInputs = [ makeWrapper python3Packages.flake8 ];
+  nativeBuildInputs = [ makeWrapper ];
 }
 ''
-    flake8 $src/*.py
-
     mkdir -p $out/bin $out/lib
 
     cp $src/*.py $out/lib
@@ -17,5 +15,5 @@ runCommand "fetch-git" {
 
     patchShebangs $out/lib/fetch-git.py
     wrapProgram $out/bin/fetch-git \
-      --set PATH "${git}/bin:${gnutar}/bin:${bash}/bin"
+      --set PATH "${python3}/bin:${git}/bin:${gnutar}/bin:${bash}/bin"
 ''
