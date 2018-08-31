@@ -11,7 +11,7 @@ setup(
     py_modules=['fetchgit'],
     entry_points={
         'console_scripts': [
-            'fetch-git = fetchgit:main'
+            'fetch-git = fetchgit.fetchgit:main'
         ]
     },
 )

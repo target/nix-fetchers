@@ -1,5 +1,5 @@
 import os
-import log
+from fetchgit import log
 import fcntl
 import errno
 

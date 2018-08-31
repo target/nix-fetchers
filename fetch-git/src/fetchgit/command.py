@@ -1,5 +1,5 @@
 import subprocess
-import log
+from fetchgit import log
 
 
 def cmd(cwd, command):

@@ -1,9 +1,9 @@
 import os
 import subprocess
-import log
-from paths import sanitize_path_segment
-from command import cmd
-from nixerrors import NixError
+from fetchgit import log
+from fetchgit.paths import sanitize_path_segment
+from fetchgit.command import cmd
+from fetchgit.nixerrors import NixError
 
 
 def setup_bare(path):

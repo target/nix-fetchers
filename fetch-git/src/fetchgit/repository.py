@@ -1,7 +1,7 @@
 import os
-from paths import sanitize_path_segment
-from lock import FileLock
-from nixerrors import NixError
+from fetchgit.paths import sanitize_path_segment
+from fetchgit.lock import FileLock
+from fetchgit.nixerrors import NixError
 
 
 def cache_root(repository):

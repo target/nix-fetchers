@@ -3,11 +3,11 @@
 import json
 import argparse
 
-import log
-from archives import TagArchive, BranchArchive
-from arguments import BranchRevisionAction
-from repository import RepositoryCache
-from nixerrors import NixError
+import fetchgit.log
+from fetchgit.archives import TagArchive, BranchArchive
+from fetchgit.arguments import BranchRevisionAction
+from fetchgit.repository import RepositoryCache
+from fetchgit.nixerrors import NixError
 
 
 def dont_break_out_of_double_single_quotes(msg):
@@ -70,42 +70,43 @@ group.add_argument("--branch", nargs=2, metavar=("branch", "revision"),
                    action=BranchRevisionAction,
                    help="Name and revision to archive")
 
-args = parser.parse_args()
+def main():
+    args = parser.parse_args()
 
-try:
-    if args.tag is not None:
-        c = RepositoryCache(args.repo)
-        archive = TagArchive(
-            c,
-            args.tag[0],
-            args.name
-        )
-        print_success(archive.make_archive())
-    elif args.branch is not None:
-        branch = args.branch
-        commit = args.revision
-        c = RepositoryCache(args.repo)
-        archive = BranchArchive(
-            c,
-            branch,
-            commit,
-            args.name
-        )
-        print_success(archive.make_archive())
-    else:
-        parser.print_help()
-        exit(2)
-except NixError as e:
-    error_fmt = """
+    try:
+        if args.tag is not None:
+            c = RepositoryCache(args.repo)
+            archive = TagArchive(
+                c,
+                args.tag[0],
+                args.name
+            )
+            print_success(archive.make_archive())
+        elif args.branch is not None:
+            branch = args.branch
+            commit = args.revision
+            c = RepositoryCache(args.repo)
+            archive = BranchArchive(
+                c,
+                branch,
+                commit,
+                args.name
+            )
+            print_success(archive.make_archive())
+        else:
+            parser.print_help()
+            exit(2)
+    except NixError as e:
+        error_fmt = """
       (let
         x = (builtins.fromJSON ''{}'');
       in builtins.trace x x)
     """
-    print(error_fmt.format(
-      json.dumps({
-          "error": e.failure_type,
-          "message": e.message,
-          "debug": [dont_break_out_of_double_single_quotes(msg)
+        print(error_fmt.format(
+            json.dumps({
+                "error": e.failure_type,
+                "message": e.message,
+                "debug": [dont_break_out_of_double_single_quotes(msg)
                     for msg in log.debug_msgs]
-      })
-    ))
+            })
+        ))
