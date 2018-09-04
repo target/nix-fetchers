@@ -1,4 +1,6 @@
 language: nix
 sudo: false
 
-script: export XDG_CACHE_HOME=$HOME/.cache; cd ./test; ./run
+script:
+  - export XDG_CACHE_HOME=$HOME/.cache; cd ./test; ./run
+  - export XDG_CACHE_HOME=$HOME/.cache; cd ./test; nix-shell -p python2Packages.requests --run ./run
