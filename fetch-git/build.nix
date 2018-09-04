@@ -8,6 +8,7 @@ python3Packages.buildPythonPackage {
 
   postFixup = ''
     wrapProgram $out/bin/fetch-git \
-      --set PATH "${git}/bin:${gnutar}/bin:${bash}/bin"
+      --set PATH "${git}/bin:${gnutar}/bin:${bash}/bin" \
+      --unset PYTHONPATH
   '';
 }
