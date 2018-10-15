@@ -112,6 +112,12 @@ to behave responsibly, is also immutable and pure. Note: this
 can probably only be feasibly true in an organization with strict
 repository protection!
 
+This purity allows for reliable caching. The upstream fetchGit, by
+contrast, allows fetching the tip of any branch (or arbitrary ref) and
+has a convenience cache with a configurable TTL unless a specific
+commit is specified. If you always specify a revision, this particular
+advantage may not matter much to you.
+
 ### Uses separate Git repositories per upstream Git repository
 
 Sacrifices some caching possibilities for much faster initial
