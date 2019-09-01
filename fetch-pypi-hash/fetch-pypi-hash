@@ -120,7 +120,7 @@ main() {
     local -r version="$2"
     local -r filename="$3"
 
-    local -r cache_base="${XDG_CACHE_HOME-:$HOME/.cache}/nix-fetchers"
+    local -r cache_base="${XDG_CACHE_HOME:-$HOME/.cache}/nix-fetchers"
     local -r cache_dir="$cache_base/fetchpypi/$name/$version/$filename"
     if [ ! -f "$cache_dir/default.nix" ]; then
         fetch_json "$name" "$version"
